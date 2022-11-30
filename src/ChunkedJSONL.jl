@@ -132,6 +132,8 @@ function consume!(consume_ctx::DummyBeTreeUpsertingContext, parsing_ctx::Parsing
             val = nothing
             out += length(val::Nothing)
             val
+        else
+            @assert false "unreachable type reached (t = $t)"
         end
     end
     return out
