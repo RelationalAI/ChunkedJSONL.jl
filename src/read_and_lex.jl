@@ -21,8 +21,10 @@ function prepare_buffer!(io::IO, buf::Vector{UInt8}, last_newline_at)
     buffersize = UInt32(length(buf))
     if last_newline_at == 0 # this is the first time we saw the buffer, we'll just fill it up
         bytes_read_in = readbytesall!(io, buf, buffersize)
-        if bytes_read_in > 2 && hasBOM(buf)
-            bytes_read_in -= prepare_buffer!(io, buf, UInt32(3)) - UInt32(3)
+        if (bytes_read_in > 2 && hasBOM(buf)) || isspace(Char(first(buf)))
+            pos = hasBOM(buf) ? 4 : 1
+            pos += something(findnext(x->!isspace(Char(x)), buf, pos), 1) - 1
+            bytes_read_in -= (prepare_buffer!(io, buf, UInt32(pos - 1)) + UInt32(pos - 1))
         end
     elseif last_newline_at < buffersize
         # We'll keep the bytes that are past the last newline, shifting them to the left
