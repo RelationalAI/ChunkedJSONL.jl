@@ -8,7 +8,7 @@ function _parse_rows_forloop!(result_buf::TaskResultBuffer, task::AbstractVector
     @inbounds for i in 1:length(task) - 1
         len = Int(task[i+1])
         JSON3.@check
-        unsafe_push!(result_buf.tapeidxs, UInt32(tapeidx))
+        unsafe_push!(result_buf.tapeidxs, tapeidx)
         pos, tapeidx = JSON3.read!(buf, pos, len, buf[pos], tape, tapeidx, Any)
         pos += 1
     end
