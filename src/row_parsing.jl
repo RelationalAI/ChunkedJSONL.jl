@@ -1,3 +1,5 @@
+_nonspace(b::UInt8) = !isspace(Char(b))
+
 function _parse_rows_forloop!(result_buf::TaskResultBuffer, task::AbstractVector{UInt32}, buf)
     tape = result_buf.tape
     empty!(result_buf)
@@ -10,7 +12,7 @@ function _parse_rows_forloop!(result_buf::TaskResultBuffer, task::AbstractVector
         JSON3.@check
         unsafe_push!(result_buf.tapeidxs, tapeidx)
         pos, tapeidx = JSON3.read!(buf, pos, len, buf[pos], tape, tapeidx, Any)
-        pos += 1
+        pos = something(findnext(_nonspace, buf, pos+1), pos+1)
     end
     return nothing
 end

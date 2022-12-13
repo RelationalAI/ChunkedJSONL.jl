@@ -57,7 +57,6 @@ end
 function consume!(consume_ctx::ValueExtractionContext, parsing_ctx::ParsingContext, task_buf::TaskResultBuffer, row_num::UInt32, eol_idx::UInt32)
     tape = task_buf.tape
     buf = parsing_ctx.bytes
-    out = 0
     objinds = Dict{Symbol,Int}()
     arrinds = Int[]
     @inbounds for tapeidx in task_buf.tapeidxs
@@ -66,38 +65,31 @@ function consume!(consume_ctx::ValueExtractionContext, parsing_ctx::ParsingConte
             empty!(objinds)
             val = JSON3.Object(buf, Base.unsafe_view(tape, tapeidx:tapeidx + JSON3.getnontypemask(t)), objinds)
             JSON3.populateinds!(val::JSON3.Object)
-            out += length(val::JSON3.Object)
             val
         elseif JSON3.isarray(t)
             empty!(arrinds)
             T = JSON3.Array{JSON3.geteltype(tape[tapeidx+1])}
             val = T(buf, Base.unsafe_view(tape, tapeidx:tapeidx + JSON3.getnontypemask(t)), arrinds)
             JSON3.populateinds!(val::T)
-            out += length(val::T)
             val
         elseif JSON3.isstring(t)
             val = JSON3.getvalue(String, buf, tape, tapeidx, t)
-            out += length(val::String)
             val
         elseif JSON3.isint(t)
             val = JSON3.getvalue(Int64, buf, tape, tapeidx, t)
-            out += length(val::Int)
             val
         elseif JSON3.isfloat(t)
             val = JSON3.getvalue(Float64, buf, tape, tapeidx, t)
-            out += length(val::Float64)
             val
         elseif JSON3.isbool(t)
             val = JSON3.getvalue(Bool, buf, tape, tapeidx, t)
-            out += length(val::Bool)
             val
         elseif JSON3.isnull(t)
             val = nothing
-            out += length(val::Nothing)
             val
         else
             @assert false "unreachable type reached (t = $t)"
         end
+        @info val
     end
-    return out
 end
