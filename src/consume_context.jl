@@ -52,44 +52,32 @@ end
 
 
 struct ValueExtractionContext <: AbstractConsumeContext
+    elements::Vector{Union{Dict{Symbol},Vector,String,Nothing,Bool,Float64,Int}}
+    indices::Vector{Int}
+    lock::ReentrantLock
+end
+ValueExtractionContext() = ValueExtractionContext([], Int[], ReentrantLock())
+function Base.sort!(ctx::ValueExtractionContext)
+    ctx.elements .= @view ctx.elements[sortperm(ctx.indices)]
+    ctx.indices .= 1:length(ctx.indices)
+    return ctx
 end
 
 function consume!(consume_ctx::ValueExtractionContext, parsing_ctx::ParsingContext, task_buf::TaskResultBuffer, row_num::UInt32, eol_idx::UInt32)
     tape = task_buf.tape
     buf = parsing_ctx.bytes
-    objinds = Dict{Symbol,Int}()
-    arrinds = Int[]
+    row = Int(row_num)
     @inbounds for tapeidx in task_buf.tapeidxs
         t = tape[tapeidx]
-        if JSON3.isobject(t)
-            empty!(objinds)
-            val = JSON3.Object(buf, Base.unsafe_view(tape, tapeidx:tapeidx + JSON3.getnontypemask(t)), objinds)
-            JSON3.populateinds!(val::JSON3.Object)
-            val
-        elseif JSON3.isarray(t)
-            empty!(arrinds)
-            T = JSON3.Array{JSON3.geteltype(tape[tapeidx+1])}
-            val = T(buf, Base.unsafe_view(tape, tapeidx:tapeidx + JSON3.getnontypemask(t)), arrinds)
-            JSON3.populateinds!(val::T)
-            val
-        elseif JSON3.isstring(t)
-            val = JSON3.getvalue(String, buf, tape, tapeidx, t)
-            val
-        elseif JSON3.isint(t)
-            val = JSON3.getvalue(Int64, buf, tape, tapeidx, t)
-            val
-        elseif JSON3.isfloat(t)
-            val = JSON3.getvalue(Float64, buf, tape, tapeidx, t)
-            val
-        elseif JSON3.isbool(t)
-            val = JSON3.getvalue(Bool, buf, tape, tapeidx, t)
-            val
-        elseif JSON3.isnull(t)
-            val = nothing
-            val
-        else
-            @assert false "unreachable type reached (t = $t)"
+        val = JSON3.getvalue(Any, buf, tape, tapeidx, t)
+        if isa(val, Union{JSON3.Object,JSON3.Array})
+            val = copy(val)
         end
-        @info val
+        @lock consume_ctx.lock begin
+            push!(consume_ctx.elements, val)
+            push!(consume_ctx.indices, row)
+        end
+        row += 1
     end
+    return nothing
 end
