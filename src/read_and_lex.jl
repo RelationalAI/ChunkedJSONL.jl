@@ -23,7 +23,7 @@ function prepare_buffer!(io::IO, buf::Vector{UInt8}, last_newline_at)
         bytes_read_in = readbytesall!(io, buf, buffersize)
         if (bytes_read_in > 2 && hasBOM(buf)) || isspace(Char(first(buf)))
             pos = hasBOM(buf) ? 4 : 1
-            pos += something(findnext(x->!isspace(Char(x)), buf, pos), 1) - 1
+            pos = something(findnext(x->!isspace(Char(x)), buf, pos), pos)
             bytes_read_in -= (prepare_buffer!(io, buf, UInt32(pos - 1)) + UInt32(pos - 1))
         end
     elseif last_newline_at < buffersize
