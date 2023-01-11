@@ -6,6 +6,7 @@ function _parse_rows_forloop!(result_buf::TaskResultBuffer, task::AbstractVector
     Base.ensureroom(result_buf, ceil(Int, length(task) * 1.01))
 
     pos = Int(first(task)) + 1
+    pos = something(findnext(_nonspace, buf, pos), pos)
     tapeidx = 1
     @inbounds for i in 1:length(task) - 1
         len = Int(task[i+1]) - 1
