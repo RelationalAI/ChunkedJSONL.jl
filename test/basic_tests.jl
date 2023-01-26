@@ -22,6 +22,11 @@ alg=:serial
             ChunkedJSONL.parse_file(IOBuffer("\"1.0\""), ctx, _force=alg)
 
             @test ctx.elements[1] == "1.0"
+
+            ctx = ValueExtractionContext()
+            ChunkedJSONL.parse_file(IOBuffer("\"aaa\\\"aaa\""), ctx, _force=alg)
+
+            @test ctx.elements[1] == "aaa\"aaa"
         end
         @testset "Bool $alg" begin
             ctx = ValueExtractionContext()
@@ -59,6 +64,11 @@ alg=:serial
             @test ctx.elements[1] == ["1", "2"]
 
             ctx = ValueExtractionContext()
+            ChunkedJSONL.parse_file(IOBuffer("[\"aaa\\\"aaa\", \"bbb\\\"bbb\"]"), ctx, _force=alg)
+
+            @test ctx.elements[1] == ["aaa\"aaa", "bbb\"bbb"]
+
+            ctx = ValueExtractionContext()
             ChunkedJSONL.parse_file(IOBuffer("[true, false]"), ctx, _force=alg)
 
             @test ctx.elements[1] == [true, false]
@@ -83,6 +93,11 @@ alg=:serial
             ChunkedJSONL.parse_file(IOBuffer("{\"a\": 1}"), ctx, _force=alg)
 
             @test ctx.elements[1] == Dict{Symbol,Any}(:a => 1)
+
+            ctx = ValueExtractionContext()
+            ChunkedJSONL.parse_file(IOBuffer("{\"a\\\"a\": 1}"), ctx, _force=alg)
+
+            @test ctx.elements[1] == Dict{Symbol,Any}(Symbol("a\"a") => 1)
 
             ctx = ValueExtractionContext()
             ChunkedJSONL.parse_file(IOBuffer("{\"a\": 1.0}"), ctx, _force=alg)
@@ -167,6 +182,11 @@ end
             @test ctx.elements == [["1", "2"],["1", "2"]]
 
             ctx = ValueExtractionContext()
+            ChunkedJSONL.parse_file(IOBuffer("[\"1\\\"\", \"2\\\"\"]\n[\"1\\\"\", \"2\\\"\"]"), ctx, _force=alg, buffersize=15)
+
+            @test ctx.elements == [["1\"", "2\""],["1\"", "2\""]]
+
+            ctx = ValueExtractionContext()
             ChunkedJSONL.parse_file(IOBuffer("[true, false]\n[true, false]"), ctx, _force=alg, buffersize=14)
 
             @test ctx.elements == [[true, false],[true, false]]
@@ -201,6 +221,11 @@ end
             ChunkedJSONL.parse_file(IOBuffer("{\"a\": \"1\"}\n{\"a\": \"1\"}"), ctx, _force=alg, buffersize=11)
 
             @test ctx.elements == [Dict{Symbol,Any}(:a => "1"),Dict{Symbol,Any}(:a => "1")]
+
+            ctx = ValueExtractionContext()
+            ChunkedJSONL.parse_file(IOBuffer("{\"a\\\"\": \"1\\\"\"}\n{\"a\\\"\": \"1\\\"\"}"), ctx, _force=alg, buffersize=15)
+
+            @test ctx.elements == [Dict{Symbol,Any}(Symbol("a\"") => "1\""),Dict{Symbol,Any}(Symbol("a\"") => "1\"")]
 
             ctx = ValueExtractionContext()
             ChunkedJSONL.parse_file(IOBuffer("{\"a\": true}\n{\"a\": true}"), ctx, _force=alg, buffersize=12)
@@ -489,6 +514,11 @@ end
             @test ctx.elements == [["1", "2"],["1", "2"]]
 
             ctx = ValueExtractionContext()
+            ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf [\"1\\\"\", \"2\\\"\"] \n [\"1\\\"\", \"2\\\"\"] "), ctx, _force=alg)
+
+            @test ctx.elements == [["1\"", "2\""],["1\"", "2\""]]
+
+            ctx = ValueExtractionContext()
             ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf [true, false] \n [true, false] "), ctx, _force=alg)
 
             @test ctx.elements == [[true, false],[true, false]]
@@ -523,6 +553,11 @@ end
             ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf {\"a\": \"1\"} \n {\"a\": \"1\"} "), ctx, _force=alg)
 
             @test ctx.elements == [Dict{Symbol,Any}(:a => "1"),Dict{Symbol,Any}(:a => "1")]
+
+            ctx = ValueExtractionContext()
+            ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf {\"a\\\"\": \"1\\\"\"} \n {\"a\\\"\": \"1\\\"\"} "), ctx, _force=alg)
+
+            @test ctx.elements == [Dict{Symbol,Any}(Symbol("a\"") => "1\""),Dict{Symbol,Any}(Symbol("a\"") => "1\"")]
 
             ctx = ValueExtractionContext()
             ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf {\"a\": true} \n {\"a\": true} "), ctx, _force=alg)
@@ -596,6 +631,11 @@ end
             @test ctx.elements == [["1", "2"],["1", "2"]]
 
             ctx = ValueExtractionContext()
+            ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf [\"1\\\"\", \"2\\\"\"] \n [\"1\\\"\", \"2\\\"\"] "), ctx, _force=alg, buffersize=17)
+
+            @test ctx.elements == [["1\"", "2\""],["1\"", "2\""]]
+
+            ctx = ValueExtractionContext()
             ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf [true, false] \n [true, false] "), ctx, _force=alg, buffersize=15)
 
             @test ctx.elements == [[true, false],[true, false]]
@@ -630,6 +670,11 @@ end
             ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf {\"a\": \"1\"} \n {\"a\": \"1\"} "), ctx, _force=alg, buffersize=14)
 
             @test ctx.elements == [Dict{Symbol,Any}(:a => "1"),Dict{Symbol,Any}(:a => "1")]
+
+            ctx = ValueExtractionContext()
+            ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf {\"a\\\"\": \"1\\\"\"} \n {\"a\\\"\": \"1\\\"\"} "), ctx, _force=alg, buffersize=18)
+
+            @test ctx.elements == [Dict{Symbol,Any}(Symbol("a\"") => "1\""),Dict{Symbol,Any}(Symbol("a\"") => "1\"")]
 
             ctx = ValueExtractionContext()
             ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf {\"a\": true} \n {\"a\": true} "), ctx, _force=alg, buffersize=16)
