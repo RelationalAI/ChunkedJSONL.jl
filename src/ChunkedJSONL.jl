@@ -34,7 +34,6 @@ function parse_file(
     _force::Symbol=:default,
 )
     _force in (:default, :serial, :parallel) || throw(ArgumentError("`_force` argument must be one of (:default, :serial, :parallel)."))
-    0 < nworkers < 256 || throw(ArgumentError("`nworkers` argument must be larger than 0 and smaller than 256."))
     if !isnothing(newlinechar)
         newlinechar = UInt8(newlinechar)
         sizeof(newlinechar) > 1 && throw(ArgumentError("`newlinechar` must be a single-byte character."))
