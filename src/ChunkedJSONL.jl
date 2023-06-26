@@ -5,7 +5,6 @@ export consume!, setup_tasks!, task_done!
 
 using JSON3
 using SnoopPrecompile
-using CodecZlibNG
 using ChunkedBase
 using SentinelArrays.BufferedVectors
 

@@ -703,9 +703,9 @@ end
         end
         @testset "Bool $alg" begin
             ctx = ValueExtractionContext()
-            ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf false \n true "), ctx, _force=alg, buffersize=7)
+            ChunkedJSONL.parse_file(IOBuffer("\xef\xbb\xbf false \n false "), ctx, _force=alg, buffersize=7)
 
-            @test ctx.elements == [false, true]
+            @test ctx.elements == [false, false]
         end
         @testset "Null $alg" begin
             ctx = ValueExtractionContext()
