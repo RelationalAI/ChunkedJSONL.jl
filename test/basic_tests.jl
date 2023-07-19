@@ -854,12 +854,17 @@ end
         ctx = ValueExtractionContext()
         ChunkedJSONL.parse_file(IOBuffer("1\n2\n\n3\n4\n5"), ctx, _force=alg, buffersize=4, skipto=2, limit=2)
 
-        @test ctx.elements == [3]
+        @test sort(ctx.elements) == [3, 4]
+
+        ctx = ValueExtractionContext()
+        ChunkedJSONL.parse_file(IOBuffer("0\n1\n2\n\n3\n4\n5"), ctx, _force=alg, buffersize=4, skipto=2, limit=2)
+
+        @test ctx.elements == [2]
 
         ctx = ValueExtractionContext()
         ChunkedJSONL.parse_file(IOBuffer("1\n#\n#\n#\n2\n#\n3\n4\n5"), ctx, _force=alg, buffersize=4, skipto=2, limit=3, comment='#')
 
-        @test sort(ctx.elements) == [2,3]
+        @test sort(ctx.elements) == [2, 3]
     end
 end
 

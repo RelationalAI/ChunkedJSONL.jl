@@ -52,7 +52,7 @@ function parse_file(
 
     lexer = Lexer(io, nothing, newline)
     ChunkedBase.initial_lex!(lexer, chunking_ctx, bytes_read_in)
-    ChunkedBase.skip_rows_init!(lexer, chunking_ctx, skipto)
+    ChunkedBase.skip_rows_init!(lexer, chunking_ctx, skipto, ignoreemptyrows)
 
     nrows = length(chunking_ctx.newline_positions) - 1
     try
